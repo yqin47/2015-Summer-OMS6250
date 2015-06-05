@@ -17,7 +17,7 @@ def write_entry(logstring):
 
 def next_entry():
     global logfile
-    logfile.write("-----")
+    logfile.write("-----\n")
     print "-----"
 
 def finish_log():
