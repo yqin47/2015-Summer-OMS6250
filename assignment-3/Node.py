@@ -53,7 +53,7 @@ class Node(object):
         ''' Performs the send operation, after verifying that the neighber is
             valid.
         '''
-        if neighbor not in self.neighbors:
+        if dest not in self.links:
             raise Exception("Neighbor " + dest + " not part of neighbors of " + self.name)
         
         self.topology.topodict[dest].queue_msg(msg)
@@ -145,12 +145,12 @@ class Topology(object):
         '''
         #Prime the pump
         for node in self.nodes:
-            for neighbor in self.neighbors:
+            for neighbor in node.links:
                 # TODO - Build message
                 msg = None
 
                 # Send message to neighbor
-                self.send_msg(msg, neighbor
+                node.send_msg(msg, neighbor)
 
 
         done = False
