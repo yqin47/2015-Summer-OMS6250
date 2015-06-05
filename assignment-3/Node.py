@@ -9,24 +9,19 @@
 from helpers import *
 
 class Node(object):
-    
+    #TODO: You need to have a structure that contains current distances
+
+    def __init__(self, name, topolink, neighbors):
     # name is the name of the local node
     # links is a list of all neighbors's names. 
     # topology is a backlink to the Topology class. Used for accessing neighbors
     #   as follows: self.topology.topodict['A']
     # messages is a list of pending messages from neighbors to be processed.
     #   The format of the message is up to you; a tuple will work.
-    name = None
-    links = []
-    topology = None
-    messages = []
-
-    #TODO: You need to have a structure that contains current distances
-
-    def __init__(self, name, topolink, neighbors):
         self.name = name
-        self.topology = topolink
         self.links = neighbors
+        self.topology = topolink
+        self.messages = []
         #TODO? You may need to initialize your distance data structure
 
     def __len__(self):
@@ -54,6 +49,16 @@ class Node(object):
             if self.name not in self.topology.topodict[neighbor].links:
                 raise Exception(neighbor + " does not have link to " + self.name)
 
+    def send_msg(self, msg, dest):
+        ''' Performs the send operation, after verifying that the neighber is
+            valid.
+        '''
+        if neighbor not in self.neighbors:
+            raise Exception("Neighbor " + dest + " not part of neighbors of " + self.name)
+        
+        self.topology.topodict[dest].queue_msg(msg)
+        
+
     def queue_msg(self, msg):
         ''' Allows neighbors running Bellman-Ford to send you a message, to be
             processed next time through self.process_BF(). '''
@@ -77,14 +82,15 @@ class Node(object):
 
     def log_distances(self):
         ''' Prints distances in the following format (no whitespace either end):
-        A:B1,C2
+        A:A0,B1,C2
         A is the node were on,
         B is the neighbor, 1 is it's distance
+        A0 shows that the distance to self is 0
         Taken from topo1.py
         '''
         # TODO: The string in the format above (no newlines, no whitepsace) must
         # be defined. THen log with write_entry, example below.
-        logstring = "A:B1,C2"
+        logstring = "A:A0,B1,C2"
         write_entry(logstring)
         pass
 
@@ -92,11 +98,10 @@ class Node(object):
 
 class Topology(object):
 
-    topodict = {}
-    nodes = []
-
     def __init__(self, conf_file):
         ''' Initializes the topology. Called from outside of Node.py '''
+        self.topodict = {}
+        self.nodes = []
         self.topo_from_conf_file(conf_file)
     
     def topo_from_conf_file(self, conf_file):
@@ -129,13 +134,25 @@ class Topology(object):
                 raise
 
     def run_topo(self):
-        ''' This is where most of the action happens. In a loop, we go thorugh
-            all of the nodes in the topology running their instances of 
-            Bellman-Ford, passing and receiving messages, until there are no
-            further messages to service. Each loop, print out the distances 
-            after the loop instance. After the full loop, check to see if we're
-            finished (all queues are empty).
+        ''' This is where most of the action happens. First, we have to "prime 
+        the pump" and send to each neighbor that they are connected. 
+
+        Next, in a loop, we go through all of the nodes in the topology running
+        their instances of Bellman-Ford, passing and receiving messages, until 
+        there are no further messages to service. Each loop, print out the 
+        distances after the loop instance. After the full loop, check to see if 
+        we're finished (all queues are empty).
         '''
+        #Prime the pump
+        for node in self.nodes:
+            for neighbor in self.neighbors:
+                # TODO - Build message
+                msg = None
+
+                # Send message to neighbor
+                self.send_msg(msg, neighbor
+
+
         done = False
         while done == False:
             for node in self.nodes:
