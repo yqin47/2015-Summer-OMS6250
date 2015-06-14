@@ -24,6 +24,12 @@ class LearningSwitch(DynamicPolicy):
         # Couple of suggestions: Dictionary of dictionaries, Dictionary of 
         # tuples. 
 
+        self.forward_table = {}
+        self.forward_table['1'] = {}
+        self.forward_table['2'] = {}
+        self.forward_table['3'] = {}
+        self.forward_table['4'] = {}
+        self.forward_table['5'] = {}
 
         # only use one flood instance - this is the default policy when there 
         # isn't a known path.
@@ -44,14 +50,21 @@ class LearningSwitch(DynamicPolicy):
         # table are set up. Us the functions in the first half of helpers.
         # Format should be to call write_forwarding_entry() for each entry in
         # the forwarding table, then finish up with finish_printing(). 
+        open_log("learning-switch.log")
+        for entry in self.forward_table.keys():
+            for rule in self.forward_table[entry].keys():
+                write_forwarding_entry(int(entry), int(self.forward_table[entry][rule]), rule)
+        next_entry()
+        finish_log()
         pass
 
     def learn_route(self, pkt):
         """  This function adds new routes into the fowarding table. """
 
         # TODO - create a new entry in the fowarding table. Use the functions 
-        # in the second half of helpers to simplify all your work.
-        
+        # in the second half of helpers to simplify all your work.    
+
+        self.forward_table[str(get_switch(pkt))][str(get_src_mac(pkt))] = get_inport(pkt)
 
         # print out the switch tables:
         self.print_switch_tables()
@@ -76,20 +89,19 @@ class LearningSwitch(DynamicPolicy):
         # TODO: Example code. You will need to edit this based on how you're 
         # storing your policies. You should only have to replace the details in
         # rule entries.
-        rule1 = 1, "00:00:00:00:00:01", 3
-        rule2 = 1, "00:00:00:00:00:02", 2
-        for rule in (rule1, rule2):
-            if new_policy == None:
-                # First entry, prime the pump
-                new_policy = (match(switch=int(rule[0]), dstmac=(rule[1])) >>
-                              fwd(rule[2]))
-            else:
-                new_policy += (match(switch=int(rule[0]), dstmac=(rule[1])) >>
-                               fwd(rule[2]))
-            if not_flood_pkts == None:
-                not_flood_pkts = (match(switch=int(rule[0]), dstmac=(rule[1])))
-            else:
-                not_flood_pkts |= (match(switch=int(rule[0]), dstmac=(rule[1])))
+        for entry in self.forward_table.keys():
+            for rule in self.forward_table[entry].keys():
+                if new_policy == None:
+                    new_policy = (match(switch=int(entry), dstmac=rule) >> 
+                                  fwd(self.forward_table[entry][rule]))
+                else:
+                    new_policy += (match(switch=int(entry), dstmac=rule) >> 
+                                   fwd(self.forward_table[entry][rule]))
+                
+                if not_flood_pkts == None:
+                    not_flood_pkts = (match(switch=int(entry), dstmac=rule))
+                else:
+                    not_flood_pkts |= (match(switch=int(entry), dstmac=rule))
                         
                 
 
@@ -107,3 +119,4 @@ class LearningSwitch(DynamicPolicy):
 
 def main():
     return LearningSwitch()
+

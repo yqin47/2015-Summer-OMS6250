@@ -26,7 +26,20 @@ class StaticSwitch(Policy):
 
         # TODO: set up forwarding tables. Create this however you wish. As
         # a suggestion, using a list of tuples will work.
-        
+        self.table = []
+        self.table.append((1, 1, "00:00:00:00:00:01"))
+        self.table.append((1, 2, "00:00:00:00:00:02"))
+        self.table.append((1, 3, "00:00:00:00:00:03"))
+        self.table.append((1, 3, "00:00:00:00:00:04"))
+        self.table.append((2, 1, "00:00:00:00:00:03"))
+        self.table.append((2, 2, "00:00:00:00:00:04"))
+        self.table.append((2, 3, "00:00:00:00:00:01"))
+        self.table.append((2, 3, "00:00:00:00:00:02"))
+        open_log("static-forwarding.log")
+        for entry in self.table:
+            write_forwarding_entry(entry[0], entry[1], entry[2])
+        next_entry()
+        finish_log()
 
     def build_policy(self):
         """ 
@@ -39,8 +52,14 @@ class StaticSwitch(Policy):
         
         subpolicies = []
         
-        subpolicies.append(match(switch=1, dstmac="00:00:00:00:00:01") >> fwd(3))
+        subpolicies.append(match(switch=1, dstmac="00:00:00:00:00:01") >> fwd(1))
         subpolicies.append(match(switch=1, dstmac="00:00:00:00:00:02") >> fwd(2))
+        subpolicies.append(match(switch=1, dstmac="00:00:00:00:00:03") >> fwd(3))
+        subpolicies.append(match(switch=1, dstmac="00:00:00:00:00:04") >> fwd(3))
+        subpolicies.append(match(switch=2, dstmac="00:00:00:00:00:03") >> fwd(1))
+        subpolicies.append(match(switch=2, dstmac="00:00:00:00:00:04") >> fwd(2))
+        subpolicies.append(match(switch=2, dstmac="00:00:00:00:00:01") >> fwd(3))
+        subpolicies.append(match(switch=2, dstmac="00:00:00:00:00:02") >> fwd(3))
         # NOTE: this will flood for MAC broadcasts (to ff:ff:ff:ff:ff:ff).
         # You will need to include something like this in order for ARPs to 
         # propogate. xfwd() is like fwd(), but will not forward out a port a 
@@ -57,3 +76,4 @@ class StaticSwitch(Policy):
         
 def main():
     return StaticSwitch().build_policy()
+
